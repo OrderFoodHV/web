@@ -36,63 +36,63 @@ http.interceptors.response.use(
 
 // ── Auth ──
 export const AuthApi = {
-  login: (email, password) => http.post('/api/auth/login', { email, password }),
+  login: (email, password) => http.post('/auth/login', { email, password }),
 };
 
 // ── Accounts ──
 export const AccountsApi = {
-  getAll:    () => http.get('/api/admin/accounts'),
-  getOne:    (id) => http.get(`/api/admin/accounts/${id}`),
-  setStatus: (id, status) => http.put(`/api/admin/accounts/${id}/status`, { status }),
-  ban:       (id) => http.post(`/api/admin/accounts/${id}/ban`),
-  unban:     (id) => http.post(`/api/admin/accounts/${id}/unban`),
+  getAll:    () => http.get('/admin/accounts'),
+  getOne:    (id) => http.get(`/admin/accounts/${id}`),
+  setStatus: (id, status) => http.put(`/admin/accounts/${id}/status`, { status }),
+  ban:       (id) => http.post(`/admin/accounts/${id}/ban`),
+  unban:     (id) => http.post(`/admin/accounts/${id}/unban`),
 };
 
 // ── Partners ──
 export const PartnersApi = {
-  getAll:  () => http.get('/api/admin/partners'),
-  update:  (id, data) => http.put(`/api/admin/partners/${id}`, data),
-  delete:  (id) => http.delete(`/api/admin/partners/${id}`),
-  approve: (id) => http.post(`/api/admin/partners/${id}/approve`),
+  getAll:  () => http.get('/admin/partners'),
+  update:  (id, data) => http.put(`/admin/partners/${id}`, data),
+  delete:  (id) => http.delete(`/admin/partners/${id}`),
+  approve: (id) => http.post(`/admin/partners/${id}/approve`),
 };
 
 // ── Categories ──
 export const CategoriesApi = {
-  getAll:    () => http.get('/api/admin/categories'),
-  create:    (data) => http.post('/api/admin/categories', data),
-  update:    (id, data) => http.put(`/api/admin/categories/${id}`, data),
-  delete:    (id) => http.delete(`/api/admin/categories/${id}`),
-  setStatus: (id, status) => http.put(`/api/admin/categories/${id}/status`, { status }),
+  getAll:    () => http.get('/admin/categories'),
+  create:    (data) => http.post('/admin/categories', data),
+  update:    (id, data) => http.put(`/admin/categories/${id}`, data),
+  delete:    (id) => http.delete(`/admin/categories/${id}`),
+  setStatus: (id, status) => http.put(`/admin/categories/${id}/status`, { status }),
 };
 
 // ── Fees ──
 export const FeesApi = {
-  getAll:         () => http.get('/api/admin/fees'),
-  updateService:  (data) => http.put('/api/admin/fees/service', data),
-  updateShipping: (data) => http.put('/api/admin/fees/shipping', data),
-  create:         (data) => http.post('/api/admin/fees', data),
-  setStatus:      (id, status) => http.put(`/api/admin/fees/${id}/status`, { status }),
-  delete:         (id) => http.delete(`/api/admin/fees/${id}`),
+  getAll:         () => http.get('/admin/fees'),
+  updateService:  (data) => http.put('/admin/fees/service', data),
+  updateShipping: (data) => http.put('/admin/fees/shipping', data),
+  create:         (data) => http.post('/admin/fees', data),
+  setStatus:      (id, status) => http.put(`/admin/fees/${id}/status`, { status }),
+  delete:         (id) => http.delete(`/admin/fees/${id}`),
 };
 
 // ── Disputes ──
 export const DisputesApi = {
-  getAll:        () => http.get('/api/admin/disputes'),
-  getOne:        (id) => http.get(`/api/admin/disputes/${id}`),
-  resolve:       (id, data) => http.put(`/api/admin/disputes/${id}/resolve`, data),
-  refund:        (id, refund_amount) => http.post(`/api/admin/disputes/${id}/refund`, { refund_amount }),
-  reject:        (id, reason) => http.post(`/api/admin/disputes/${id}/reject`, { reason }),
-  getRefunds:    () => http.get('/api/admin/refunds'),
-  approveRefund: (id) => http.post(`/api/admin/refunds/${id}/approve`),
+  getAll:        () => http.get('/admin/disputes'),
+  getOne:        (id) => http.get(`/admin/disputes/${id}`),
+  resolve:       (id, data) => http.put(`/admin/disputes/${id}/resolve`, data),
+  refund:        (id, refund_amount) => http.post(`/admin/disputes/${id}/refund`, { refund_amount }),
+  reject:        (id, reason) => http.post(`/admin/disputes/${id}/reject`, { reason }),
+  getRefunds:    () => http.get('/admin/refunds'),
+  approveRefund: (id) => http.post(`/admin/refunds/${id}/approve`),
 };
 
 // ── Vouchers ──
 export const VouchersApi = {
-  getAll:     () => http.get('/api/admin/vouchers'),
-  getStats:   () => http.get('/api/admin/vouchers/stats'),
-  create:     (data) => http.post('/api/admin/vouchers', data),
-  update:     (id, data) => http.put(`/api/admin/vouchers/${id}`, data),
-  delete:     (id) => http.delete(`/api/admin/vouchers/${id}`),
-  activate:   (id) => http.post(`/api/admin/vouchers/${id}/activate`),
-  deactivate: (id) => http.post(`/api/admin/vouchers/${id}/deactivate`),
+  getAll:     () => http.get('/admin/vouchers'),
+  getStats:   () => http.get('/admin/vouchers/stats'),
+  create:     (data) => http.post('/admin/vouchers', data),
+  update:     (id, data) => http.put(`/admin/vouchers/${id}`, data),
+  delete:     (id) => http.delete(`/admin/vouchers/${id}`),
+  activate:   (id) => http.post(`/admin/vouchers/${id}/activate`),
+  deactivate: (id) => http.post(`/admin/vouchers/${id}/deactivate`),
 };

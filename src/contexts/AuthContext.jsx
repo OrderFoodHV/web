@@ -20,9 +20,10 @@ export function AuthProvider({ children }) {
     if (!data.user || data.user.role !== 'admin') {
       throw new Error('Tài khoản không có quyền admin!');
     }
-    localStorage.setItem('admin_token', data.token);
+    const token = data.access_token || data.token;
+    localStorage.setItem('admin_token', token);
     localStorage.setItem('admin_user', JSON.stringify(data.user));
-    setToken(data.token);
+    setToken(token);
     setUser(data.user);
     return data;
   }, []);

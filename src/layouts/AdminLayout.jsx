@@ -5,6 +5,7 @@ import {
   DashboardOutlined,
   UserOutlined,
   ShopOutlined,
+  CarOutlined,
   AppstoreOutlined,
   DollarOutlined,
   ExceptionOutlined,
@@ -32,6 +33,7 @@ const menuSections = [
     children: [
       { key: '/accounts', icon: <UserOutlined />, label: 'Tài khoản' },
       { key: '/partners', icon: <ShopOutlined />, label: 'Đối tác' },
+      { key: '/shippers', icon: <CarOutlined />, label: 'Tài xế' },
       { key: '/categories', icon: <AppstoreOutlined />, label: 'Danh mục' },
       { key: '/fees', icon: <DollarOutlined />, label: 'Phí dịch vụ' },
     ],
@@ -56,6 +58,7 @@ const pageMeta = {
   '/':           { title: 'Dashboard',    sub: 'Tổng quan hệ thống' },
   '/accounts':   { title: 'Tài khoản',   sub: 'Quản lý người dùng' },
   '/partners':   { title: 'Đối tác',     sub: 'Quản lý đối tác' },
+  '/shippers':   { title: 'Tài xế',      sub: 'Quản lý tài xế (Shipper)' },
   '/categories': { title: 'Danh mục',    sub: 'Quản lý danh mục' },
   '/fees':       { title: 'Phí dịch vụ', sub: 'Cấu hình phí' },
   '/disputes':   { title: 'Tranh chấp',  sub: 'Giải quyết khiếu nại' },

@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import AccountsPage from './pages/AccountsPage';
 import PartnersPage from './pages/PartnersPage';
+import ShippersPage from './pages/ShippersPage';
 import CategoriesPage from './pages/CategoriesPage';
 import FeesPage from './pages/FeesPage';
 import DisputesPage from './pages/DisputesPage';
@@ -34,6 +35,7 @@ export default function App() {
               <Route index element={<DashboardPage />} />
               <Route path="accounts" element={<AccountsPage />} />
               <Route path="partners" element={<PartnersPage />} />
+              <Route path="shippers" element={<ShippersPage />} />
               <Route path="categories" element={<CategoriesPage />} />
               <Route path="fees" element={<FeesPage />} />
               <Route path="disputes" element={<DisputesPage />} />

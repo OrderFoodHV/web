@@ -56,6 +56,15 @@ export const PartnersApi = {
   approve: (id) => http.post(`/admin/partners/${id}/approve`),
 };
 
+// ── Shippers ──
+export const ShippersApi = {
+  getAll:  () => http.get('/admin/shippers'),
+  approve: (id) => http.post(`/admin/shippers/${id}/approve`),
+  block:   (id) => http.post(`/admin/shippers/${id}/block`),
+  unblock: (id) => http.post(`/admin/shippers/${id}/unblock`),
+  delete:  (id) => http.delete(`/admin/shippers/${id}`),
+};
+
 // ── Categories ──
 export const CategoriesApi = {
   getAll:    () => http.get('/admin/categories'),

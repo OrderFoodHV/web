@@ -80,6 +80,7 @@ export const FeesApi = {
   updateService:  (data) => http.put('/admin/fees/service', data),
   updateShipping: (data) => http.put('/admin/fees/shipping', data),
   create:         (data) => http.post('/admin/fees', data),
+  update:         (id, data) => http.put(`/admin/fees/${id}`, data),
   setStatus:      (id, status) => http.put(`/admin/fees/${id}/status`, { status }),
   delete:         (id) => http.delete(`/admin/fees/${id}`),
 };

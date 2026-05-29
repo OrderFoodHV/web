@@ -6,8 +6,9 @@ import {
   ShopOutlined,
   ExceptionOutlined,
   GiftOutlined,
+  CarOutlined,
 } from '@ant-design/icons';
-import { AccountsApi, PartnersApi, DisputesApi, VouchersApi } from '../api';
+import { AccountsApi, PartnersApi, DisputesApi, VouchersApi, ShippersApi } from '../api';
 
 const statConfig = [
   {
@@ -23,6 +24,13 @@ const statConfig = [
     icon: <ShopOutlined />,
     color: '#f97316',
     bg: 'rgba(249, 115, 22, 0.12)',
+  },
+  {
+    key: 'shippers',
+    title: 'Tài xế (Shipper)',
+    icon: <CarOutlined />,
+    color: '#0ea5e9',
+    bg: 'rgba(14, 165, 233, 0.12)',
   },
   {
     key: 'disputes',
@@ -42,7 +50,7 @@ const statConfig = [
 
 export default function DashboardPage() {
   const { refreshKey } = useOutletContext();
-  const [stats, setStats] = useState({ accounts: 0, partners: 0, disputes: 0, vouchers: 0 });
+  const [stats, setStats] = useState({ accounts: 0, partners: 0, shippers: 0, disputes: 0, vouchers: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -51,15 +59,17 @@ export default function DashboardPage() {
 
   const loadStats = async () => {
     setLoading(true);
-    const [accounts, partners, disputes, vouchers] = await Promise.allSettled([
+    const [accounts, partners, shippers, disputes, vouchers] = await Promise.allSettled([
       AccountsApi.getAll(),
       PartnersApi.getAll(),
+      ShippersApi.getAll(),
       DisputesApi.getAll(),
       VouchersApi.getAll(),
     ]);
     setStats({
       accounts: accounts.value?.length ?? 0,
       partners: partners.value?.length ?? 0,
+      shippers: shippers.value?.length ?? 0,
       disputes: disputes.value?.length ?? 0,
       vouchers: vouchers.value?.length ?? 0,
     });
@@ -68,10 +78,10 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <Row gutter={[20, 20]}>
+      <Row gutter={[20, 20]} wrap={false}>
         {statConfig.map((s) => (
-          <Col xs={24} sm={12} lg={6} key={s.key}>
-            <Card className="stat-card" loading={loading}>
+          <Col flex="1 1 20%" key={s.key} style={{ minWidth: 0 }}>
+            <Card className="stat-card" loading={loading} style={{ height: '100%', width: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                 <div className="stat-icon" style={{ background: s.bg, color: s.color }}>
                   {s.icon}

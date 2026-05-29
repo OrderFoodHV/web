@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Card, Table, Tag, Button, Space, Modal, Form, Input, InputNumber, Row, Col, message, Popconfirm } from 'antd';
-import { DollarOutlined, PlusOutlined, SaveOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Card, Table, Tag, Button, Space, Modal, Form, Input, InputNumber, Select, message, Popconfirm, Switch } from 'antd';
+import { DollarOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { FeesApi } from '../api';
 
 const fmtNum = n => n != null ? Number(n).toLocaleString('vi-VN') : '—';
@@ -11,8 +11,7 @@ export default function FeesPage() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [svcForm] = Form.useForm();
-  const [shipForm] = Form.useForm();
+  const [editingRecord, setEditingRecord] = useState(null);
   const [newForm] = Form.useForm();
 
   useEffect(() => { loadData(); }, [refreshKey]);
@@ -22,28 +21,36 @@ export default function FeesPage() {
     try {
       const res = await FeesApi.getAll();
       setData(res);
-      const svc = res.find(f => f.fee_type === 'service_fee');
-      const shp = res.find(f => f.fee_type === 'shipping_fee');
-      if (svc) svcForm.setFieldsValue({ fee_value: svc.fee_value, fee_description: svc.fee_description || '' });
-      if (shp) shipForm.setFieldsValue({ fee_value: shp.fee_value, fee_description: shp.fee_description || '' });
     } catch (e) { message.error(e.message); }
     setLoading(false);
   };
 
-  const updateFee = async (type) => {
-    try {
-      const form = type === 'service' ? svcForm : shipForm;
-      const values = await form.validateFields();
-      type === 'service' ? await FeesApi.updateService(values) : await FeesApi.updateShipping(values);
-      message.success('Đã cập nhật phí'); loadData();
-    } catch (e) { if (e.message) message.error(e.message); }
+  const handleEditClick = (record) => {
+    setEditingRecord(record);
+    newForm.setFieldsValue({
+      fee_type: record.fee_type,
+      fee_value: record.fee_value,
+      fee_description: record.fee_description || '',
+      calculation_type: record.calculation_type || 'fixed',
+      condition_type: record.condition_type || 'none',
+      condition_value: record.condition_value != null ? Number(record.condition_value) : undefined
+    });
+    setModalOpen(true);
   };
 
-  const handleCreate = async () => {
+  const handleSave = async () => {
     try {
       const values = await newForm.validateFields();
-      await FeesApi.create(values);
-      message.success('Đã tạo cấu hình phí'); setModalOpen(false); loadData();
+      if (editingRecord) {
+        await FeesApi.update(editingRecord.id, values);
+        message.success('Đã cập nhật cấu hình phí');
+      } else {
+        await FeesApi.create(values);
+        message.success('Đã tạo cấu hình phí');
+      }
+      setModalOpen(false);
+      setEditingRecord(null);
+      loadData();
     } catch (e) { if (e.message) message.error(e.message); }
   };
 
@@ -55,62 +62,109 @@ export default function FeesPage() {
   const columns = [
     { title: '#', width: 50, render: (_, __, i) => i + 1 },
     { title: 'Loại phí', dataIndex: 'fee_type' },
-    { title: 'Giá trị', dataIndex: 'fee_value', render: v => fmtNum(v) },
+    { 
+      title: 'Giá trị', 
+      dataIndex: 'fee_value', 
+      render: (v, r) => r.calculation_type === 'percentage' ? `${v}%` : `${fmtNum(v)} đ` 
+    },
+    {
+      title: 'Điều kiện áp dụng',
+      render: (_, r) => {
+        if (r.condition_type === 'under_subtotal') {
+          return <Tag color="blue">Dưới {fmtNum(r.condition_value)} đ</Tag>;
+        }
+        if (r.condition_type === 'above_subtotal') {
+          return <Tag color="purple">Từ {fmtNum(r.condition_value)} đ trở lên</Tag>;
+        }
+        return <Tag color="default">Luôn áp dụng</Tag>;
+      }
+    },
     { title: 'Mô tả', dataIndex: 'fee_description', render: v => v || '—' },
-    { title: 'Trạng thái', dataIndex: 'status', render: v => <Tag color={v === 'active' ? 'green' : 'default'}>{v === 'active' ? 'Hoạt động' : 'Tạm dừng'}</Tag> },
+    { title: 'Trạng thái', dataIndex: 'status', render: (status, r) => (
+        <Space>
+          <Switch
+            checked={status === 'active'}
+            onChange={async (checked) => {
+              try {
+                await FeesApi.setStatus(r.id, checked ? 'active' : 'inactive');
+                message.success('Đã cập nhật trạng thái phí');
+                loadData();
+              } catch (e) {
+                message.error(e.message);
+              }
+            }}
+          />
+          <Tag color={status === 'active' ? 'green' : 'default'}>
+            {status === 'active' ? 'Bật' : 'Tắt'}
+          </Tag>
+        </Space>
+      )
+    },
     { title: 'Cập nhật', dataIndex: 'updated_at', render: v => v ? new Date(v).toLocaleDateString('vi-VN') : '—' },
-    { title: 'Hành động', width: 80, render: (_, r) => (
-        <Popconfirm title="Xóa cấu hình này?" onConfirm={() => handleDelete(r.id)} okText="Xóa" cancelText="Hủy" okButtonProps={{ danger: true }}>
-          <Button danger size="small" icon={<DeleteOutlined />} />
-        </Popconfirm>
+    { title: 'Hành động', width: 120, render: (_, r) => (
+        <Space>
+          <Button type="primary" ghost size="small" icon={<EditOutlined />} onClick={() => handleEditClick(r)} />
+          <Popconfirm title="Xóa cấu hình này?" onConfirm={() => handleDelete(r.id)} okText="Xóa" cancelText="Hủy" okButtonProps={{ danger: true }}>
+            <Button danger size="small" icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
       ),
     },
   ];
 
   return (
     <>
-      <Row gutter={[20, 20]}>
-        <Col xs={24} md={12}>
-          <Card title="💰 Phí dịch vụ">
-            <Form form={svcForm} layout="vertical">
-              <Form.Item label="Giá trị phí" name="fee_value" rules={[{ required: true, message: 'Nhập giá trị' }]}>
-                <InputNumber style={{ width: '100%' }} min={0} step={0.01} />
-              </Form.Item>
-              <Form.Item label="Mô tả" name="fee_description">
-                <Input placeholder="Phí dịch vụ..." />
-              </Form.Item>
-              <Button type="primary" icon={<SaveOutlined />} block onClick={() => updateFee('service')}>Lưu thay đổi</Button>
-            </Form>
-          </Card>
-        </Col>
-        <Col xs={24} md={12}>
-          <Card title="🚚 Phí vận chuyển">
-            <Form form={shipForm} layout="vertical">
-              <Form.Item label="Giá trị phí" name="fee_value" rules={[{ required: true, message: 'Nhập giá trị' }]}>
-                <InputNumber style={{ width: '100%' }} min={0} step={0.01} />
-              </Form.Item>
-              <Form.Item label="Mô tả" name="fee_description">
-                <Input placeholder="Phí vận chuyển..." />
-              </Form.Item>
-              <Button type="primary" icon={<SaveOutlined />} block onClick={() => updateFee('shipping')}>Lưu thay đổi</Button>
-            </Form>
-          </Card>
-        </Col>
-      </Row>
-
-      <Card title="Tất cả cấu hình phí" style={{ marginTop: 20 }}
-        extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => { newForm.resetFields(); setModalOpen(true); }}>Thêm mới</Button>}>
-        <Table columns={columns} dataSource={data} rowKey="id" loading={loading} pagination={false} scroll={{ x: 600 }} size="middle" />
+      <Card title="Tất cả cấu hình phí"
+        extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingRecord(null); newForm.resetFields(); setModalOpen(true); }}>Thêm mới</Button>}>
+        <Table columns={columns} dataSource={data} rowKey="id" loading={loading} pagination={false} scroll={{ x: 800 }} size="middle" />
       </Card>
 
-      <Modal title="Thêm cấu hình phí" open={modalOpen} onOk={handleCreate} onCancel={() => setModalOpen(false)} okText="Tạo" cancelText="Hủy">
-        <Form form={newForm} layout="vertical" style={{ marginTop: 16 }}>
+      <Modal 
+        title={editingRecord ? "Chỉnh sửa cấu hình phí" : "Thêm cấu hình phí"} 
+        open={modalOpen} 
+        onOk={handleSave} 
+        onCancel={() => { setModalOpen(false); setEditingRecord(null); }} 
+        okText={editingRecord ? "Lưu" : "Tạo"} 
+        cancelText="Hủy"
+      >
+        <Form form={newForm} layout="vertical" style={{ marginTop: 16 }} initialValues={{ calculation_type: 'fixed', condition_type: 'none' }}>
           <Form.Item label="Loại phí" name="fee_type" rules={[{ required: true, message: 'Nhập loại phí' }]}>
-            <Input placeholder="vd: platform_fee" />
+            <Input placeholder="vd: platform_fee" disabled={!!editingRecord} />
           </Form.Item>
+          
+          <Form.Item label="Cách tính" name="calculation_type" rules={[{ required: true }]}>
+            <Select options={[
+              { value: 'fixed', label: 'Cố định (đ)' },
+              { value: 'percentage', label: 'Phần trăm tiền món (%)' }
+            ]} />
+          </Form.Item>
+
           <Form.Item label="Giá trị" name="fee_value" rules={[{ required: true, message: 'Nhập giá trị' }]}>
             <InputNumber style={{ width: '100%' }} min={0} step={0.01} />
           </Form.Item>
+
+          <Form.Item label="Điều kiện áp dụng" name="condition_type" rules={[{ required: true }]}>
+            <Select options={[
+              { value: 'none', label: 'Luôn áp dụng' },
+              { value: 'under_subtotal', label: 'Khi tiền món dưới ngưỡng' },
+              { value: 'above_subtotal', label: 'Khi tiền món từ ngưỡng trở lên' }
+            ]} />
+          </Form.Item>
+
+          <Form.Item noStyle shouldUpdate={(prev, curr) => prev.condition_type !== curr.condition_type}>
+            {({ getFieldValue }) => {
+              const cond = getFieldValue('condition_type');
+              if (cond === 'under_subtotal' || cond === 'above_subtotal') {
+                return (
+                  <Form.Item label="Ngưỡng tiền món (đ)" name="condition_value" rules={[{ required: true, message: 'Nhập ngưỡng giá trị tiền món' }]}>
+                    <InputNumber style={{ width: '100%' }} min={0} step={1000} placeholder="vd: 40000" />
+                  </Form.Item>
+                );
+              }
+              return null;
+            }}
+          </Form.Item>
+
           <Form.Item label="Mô tả" name="fee_description">
             <Input placeholder="Mô tả..." />
           </Form.Item>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Card, Table, Tag, Input, Select, Button, Space, Modal, Form, message, Popconfirm } from 'antd';
+import { Card, Table, Tag, Input, Select, Button, Space, Modal, Form, message, Popconfirm, Tooltip } from 'antd';
 import { ShopOutlined, SearchOutlined, CheckOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { PartnersApi } from '../api';
 
@@ -28,7 +28,7 @@ export default function PartnersPage() {
     if (search) {
       const q = search.toLowerCase();
       result = result.filter((p) =>
-        [p.name, p.email, p.phone, p.address].some((v) => (v || '').toLowerCase().includes(q))
+        [p.name, p.phone, p.address].some((v) => (v || '').toLowerCase().includes(q))
       );
     }
     if (statusFilter) result = result.filter((p) => p.status === statusFilter);
@@ -76,9 +76,8 @@ export default function PartnersPage() {
   const columns = [
     { title: '#', width: 50, render: (_, __, i) => i + 1 },
     { title: 'Tên', dataIndex: 'name', render: (v) => <strong>{v || '—'}</strong> },
-    { title: 'Email', dataIndex: 'email', render: (v) => v || '—' },
     { title: 'SĐT', dataIndex: 'phone', render: (v) => v || '—' },
-    { title: 'Địa chỉ', dataIndex: 'address', render: (v) => v || '—', ellipsis: true },
+    { title: 'Địa chỉ', dataIndex: 'address', render: (v) => v ? <Tooltip title={v}><span>{v}</span></Tooltip> : '—', ellipsis: true },
     {
       title: 'Trạng thái', dataIndex: 'status',
       render: (v) => {
@@ -117,7 +116,7 @@ export default function PartnersPage() {
       <Card title={<span><ShopOutlined style={{ marginRight: 8 }} />Quản lý đối tác</span>}>
         <div className="filter-bar">
           <Input
-            placeholder="Tìm theo tên, email, địa chỉ..."
+            placeholder="Tìm theo tên, địa chỉ..."
             prefix={<SearchOutlined />}
             allowClear
             value={search}
@@ -149,6 +148,16 @@ export default function PartnersPage() {
           pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (t) => `Tổng ${t}` }}
           scroll={{ x: 800 }}
           size="middle"
+          expandable={{
+            expandedRowRender: (record) => (
+              <div style={{ margin: 0, padding: '12px 16px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                <p style={{ margin: '4px 0', fontSize: '14px' }}><strong>Tên đối tác:</strong> {record.name}</p>
+                <p style={{ margin: '4px 0', fontSize: '14px' }}><strong>Số điện thoại:</strong> {record.phone || '—'}</p>
+                <p style={{ margin: '4px 0', fontSize: '14px', lineHeight: '1.6' }}><strong>Địa chỉ đầy đủ:</strong> {record.address || '—'}</p>
+              </div>
+            ),
+            rowExpandable: (record) => !!record.address,
+          }}
         />
       </Card>
 

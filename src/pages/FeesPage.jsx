@@ -33,7 +33,8 @@ export default function FeesPage() {
       fee_description: record.fee_description || '',
       calculation_type: record.calculation_type || 'fixed',
       condition_type: record.condition_type || 'none',
-      condition_value: record.condition_value != null ? Number(record.condition_value) : undefined
+      condition_value: record.condition_value != null ? Number(record.condition_value) : undefined,
+      extra_value: record.extra_value != null ? Number(record.extra_value) : undefined
     });
     setModalOpen(true);
   };
@@ -65,11 +66,19 @@ export default function FeesPage() {
     { 
       title: 'Giá trị', 
       dataIndex: 'fee_value', 
-      render: (v, r) => r.calculation_type === 'percentage' ? `${v}%` : `${fmtNum(v)} đ` 
+      render: (v, r) => {
+        if (r.fee_type === 'shipping_fee') {
+          return `${fmtNum(v)} đ (${r.condition_value || 0} km đầu) + ${fmtNum(r.extra_value || 0)} đ/km sau`;
+        }
+        return r.calculation_type === 'percentage' ? `${v}%` : `${fmtNum(v)} đ`;
+      }
     },
     {
       title: 'Điều kiện áp dụng',
       render: (_, r) => {
+        if (r.fee_type === 'shipping_fee') {
+          return <Tag color="green">Khoảng cách GPS thực tế</Tag>;
+        }
         if (r.condition_type === 'under_subtotal') {
           return <Tag color="blue">Dưới {fmtNum(r.condition_value)} đ</Tag>;
         }
@@ -127,41 +136,66 @@ export default function FeesPage() {
         okText={editingRecord ? "Lưu" : "Tạo"} 
         cancelText="Hủy"
       >
-        <Form form={newForm} layout="vertical" style={{ marginTop: 16 }} initialValues={{ calculation_type: 'fixed', condition_type: 'none' }}>
+        <Form form={newForm} layout="vertical" style={{ marginTop: 16 }} initialValues={{ calculation_type: 'fixed', condition_type: 'none', extra_value: 0 }}>
           <Form.Item label="Loại phí" name="fee_type" rules={[{ required: true, message: 'Nhập loại phí' }]}>
             <Input placeholder="vd: platform_fee" disabled={!!editingRecord} />
           </Form.Item>
           
-          <Form.Item label="Cách tính" name="calculation_type" rules={[{ required: true }]}>
-            <Select options={[
-              { value: 'fixed', label: 'Cố định (đ)' },
-              { value: 'percentage', label: 'Phần trăm tiền món (%)' }
-            ]} />
-          </Form.Item>
-
-          <Form.Item label="Giá trị" name="fee_value" rules={[{ required: true, message: 'Nhập giá trị' }]}>
-            <InputNumber style={{ width: '100%' }} min={0} step={0.01} />
-          </Form.Item>
-
-          <Form.Item label="Điều kiện áp dụng" name="condition_type" rules={[{ required: true }]}>
-            <Select options={[
-              { value: 'none', label: 'Luôn áp dụng' },
-              { value: 'under_subtotal', label: 'Khi tiền món dưới ngưỡng' },
-              { value: 'above_subtotal', label: 'Khi tiền món từ ngưỡng trở lên' }
-            ]} />
-          </Form.Item>
-
-          <Form.Item noStyle shouldUpdate={(prev, curr) => prev.condition_type !== curr.condition_type}>
+          <Form.Item noStyle shouldUpdate={(prev, curr) => prev.fee_type !== curr.fee_type}>
             {({ getFieldValue }) => {
-              const cond = getFieldValue('condition_type');
-              if (cond === 'under_subtotal' || cond === 'above_subtotal') {
+              const isShipping = getFieldValue('fee_type') === 'shipping_fee';
+              if (isShipping) {
                 return (
-                  <Form.Item label="Ngưỡng tiền món (đ)" name="condition_value" rules={[{ required: true, message: 'Nhập ngưỡng giá trị tiền món' }]}>
-                    <InputNumber style={{ width: '100%' }} min={0} step={1000} placeholder="vd: 40000" />
-                  </Form.Item>
+                  <>
+                    <Form.Item label="Phí giao hàng cơ bản (đ)" name="fee_value" rules={[{ required: true, message: 'Nhập phí cơ bản' }]}>
+                      <InputNumber style={{ width: '100%' }} min={0} step={1000} placeholder="vd: 15000" />
+                    </Form.Item>
+                    <Form.Item label="Số km đầu tiên áp dụng phí cơ bản" name="condition_value" rules={[{ required: true, message: 'Nhập số km' }]}>
+                      <InputNumber style={{ width: '100%' }} min={0} step={0.5} placeholder="vd: 2" />
+                    </Form.Item>
+                    <Form.Item label="Phí cộng thêm mỗi km tiếp theo (đ/km)" name="extra_value" rules={[{ required: true, message: 'Nhập phí cộng thêm' }]}>
+                      <InputNumber style={{ width: '100%' }} min={0} step={1000} placeholder="vd: 5000" />
+                    </Form.Item>
+                  </>
                 );
               }
-              return null;
+              
+              return (
+                <>
+                  <Form.Item label="Cách tính" name="calculation_type" rules={[{ required: true }]}>
+                    <Select options={[
+                      { value: 'fixed', label: 'Cố định (đ)' },
+                      { value: 'percentage', label: 'Phần trăm tiền món (%)' }
+                    ]} />
+                  </Form.Item>
+
+                  <Form.Item label="Giá trị" name="fee_value" rules={[{ required: true, message: 'Nhập giá trị' }]}>
+                    <InputNumber style={{ width: '100%' }} min={0} step={0.01} />
+                  </Form.Item>
+
+                  <Form.Item label="Điều kiện áp dụng" name="condition_type" rules={[{ required: true }]}>
+                    <Select options={[
+                      { value: 'none', label: 'Luôn áp dụng' },
+                      { value: 'under_subtotal', label: 'Khi tiền món dưới ngưỡng' },
+                      { value: 'above_subtotal', label: 'Khi tiền món từ ngưỡng trở lên' }
+                    ]} />
+                  </Form.Item>
+
+                  <Form.Item noStyle shouldUpdate={(prev, curr) => prev.condition_type !== curr.condition_type}>
+                    {({ getFieldValue }) => {
+                      const cond = getFieldValue('condition_type');
+                      if (cond === 'under_subtotal' || cond === 'above_subtotal') {
+                        return (
+                          <Form.Item label="Ngưỡng tiền món (đ)" name="condition_value" rules={[{ required: true, message: 'Nhập ngưỡng giá trị tiền món' }]}>
+                            <InputNumber style={{ width: '100%' }} min={0} step={1000} placeholder="vd: 40000" />
+                          </Form.Item>
+                        );
+                      }
+                      return null;
+                    }}
+                  </Form.Item>
+                </>
+              );
             }}
           </Form.Item>
 

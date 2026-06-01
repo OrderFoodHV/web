@@ -95,6 +95,15 @@ export default function DisputesPage() {
     { title: 'Đối tác', dataIndex: 'partner_name', render: (v, r) => v || r.partner_id || '—' },
     { title: 'Lý do', dataIndex: 'reason', render: v => v || '—', ellipsis: true, width: 150 },
     { title: 'Trạng thái', dataIndex: 'status', render: v => { const s = statusMap[v] || { color: 'default', text: v }; return <Tag color={s.color}>{s.text}</Tag>; } },
+    { 
+      title: 'Bằng chứng giao', 
+      dataIndex: 'delivery_photo', 
+      render: v => v ? (
+        <a href={v} target="_blank" rel="noopener noreferrer">
+          <img src={v} alt="Proof" style={{ width: 55, height: 40, objectFit: 'cover', borderRadius: 4, border: '1px solid #e2e8f0' }} />
+        </a>
+      ) : 'Không có' 
+    },
     { title: 'Hoàn tiền', dataIndex: 'refund_amount', render: v => v ? fmtNum(v) + 'đ' : '—' },
     { title: 'Ngày', dataIndex: 'created_at', render: fmtDate },
     { title: 'Hành động', width: 140, render: (_, r) => (r.status === 'pending' || !r.status) ? (
